@@ -1,0 +1,51 @@
+<template>
+    <template if:true={showBanner}>
+        <div class="restore-banner">
+            <div class="restore-inner">
+                <div class="restore-left">
+                    <lightning-icon icon-name="utility:clock" size="small" class="restore-icon"></lightning-icon>
+                    <div class="restore-text">
+                        <span class="restore-title">Welcome back{firstNameClause}! Restore your session from {sessionDateLabel}?</span>
+                        <span class="restore-sub">{sessionSummary}</span>
+                    </div>
+                </div>
+                <div class="restore-actions">
+                    <button class="restore-btn restore-btn-primary" onclick={handleRestore}>
+                        <lightning-icon icon-name="utility:redo" size="xx-small"></lightning-icon>
+                        &nbsp;Restore Session
+                    </button>
+                    <button class="restore-btn restore-btn-secondary" onclick={handleDismiss}>
+                        Dismiss
+                    </button>
+                </div>
+            </div>
+
+            <!-- Expanded tab list -->
+            <template if:true={isExpanded}>
+                <div class="restore-tabs">
+                    <template for:each={sessionTabs} for:item="tab">
+                        <div key={tab.id} class="restore-tab-row" data-id={tab.recordId} onclick={handleTabClick}>
+                            <lightning-icon icon-name={tab.iconName} size="x-small" class="tab-icon"></lightning-icon>
+                            <div class="tab-info">
+                                <span class="tab-name">{tab.recordName}</span>
+                                <span class="tab-meta">{tab.objectType} · {tab.timeLabel}</span>
+                            </div>
+                            <span class="tab-action-badge">{tab.actionType}</span>
+                        </div>
+                    </template>
+                </div>
+                <div class="restore-footer">
+                    <button class="restore-btn restore-btn-all" onclick={handleRestoreAll}>
+                        Open All ({sessionTabs.length})
+                    </button>
+                </div>
+            </template>
+
+            <template if:false={isExpanded}>
+                <button class="restore-toggle" onclick={handleToggle}>
+                    Show {sessionTabs.length} records ▾
+                </button>
+            </template>
+        </div>
+    </template>
+</template>

@@ -1,0 +1,169 @@
+/* ── Restore Banner ── */
+.restore-banner {
+    margin: 12px 16px 0;
+    background: #f0f7ff;
+    border: 1.5px solid #0070d2;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.restore-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    gap: 12px;
+}
+
+.restore-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+
+.restore-icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.restore-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.restore-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #032d60;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.restore-sub {
+    font-size: 0.78rem;
+    color: #444;
+}
+
+/* ── Action Buttons ── */
+.restore-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.restore-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: background 0.15s, transform 0.1s;
+    white-space: nowrap;
+}
+
+.restore-btn:active { transform: translateY(1px); }
+
+.restore-btn-primary {
+    background: #0070d2;
+    color: #fff;
+}
+.restore-btn-primary:hover { background: #005fb2; }
+
+.restore-btn-secondary {
+    background: #fff;
+    color: #444;
+    border: 1px solid #c9c9c9;
+}
+.restore-btn-secondary:hover { background: #f4f4f4; }
+
+.restore-btn-all {
+    background: #0070d2;
+    color: #fff;
+    margin: 0 16px 12px;
+    padding: 6px 16px;
+    border-radius: 4px;
+}
+.restore-btn-all:hover { background: #005fb2; }
+
+/* ── Toggle (show N records) ── */
+.restore-toggle {
+    display: block;
+    width: 100%;
+    padding: 6px 16px;
+    background: transparent;
+    border: none;
+    border-top: 1px solid #d8e8f8;
+    color: #0070d2;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s;
+}
+.restore-toggle:hover { background: #e8f0fe; }
+
+/* ── Expanded record list ── */
+.restore-tabs {
+    border-top: 1px solid #d8e8f8;
+}
+
+.restore-tab-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-bottom: 1px solid #edf3fb;
+}
+.restore-tab-row:hover { background: #e8f0fe; }
+.restore-tab-row:last-child { border-bottom: none; }
+
+.tab-icon { flex-shrink: 0; }
+
+.tab-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    flex: 1;
+    min-width: 0;
+}
+
+.tab-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #032d60;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tab-meta {
+    font-size: 0.75rem;
+    color: #706e6b;
+}
+
+.tab-action-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #0070d2;
+    background: #e0f0ff;
+    padding: 2px 8px;
+    border-radius: 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.restore-footer {
+    border-top: 1px solid #d8e8f8;
+}

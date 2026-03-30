@@ -1,0 +1,534 @@
+<template>
+    <div class="w360-shell">
+
+        <!-- ── Header ── -->
+        <div class="w360-header">
+            <div class="w360-header-left">
+                <div class="w360-logo">
+                    <lightning-icon icon-name="utility:layers" size="small"></lightning-icon>
+                    <span class="w360-brand">Workspace <strong>360</strong></span>
+                </div>
+                <div class="w360-greeting">
+                    Good {greetingTime}, {firstName} 👋
+                    <span class="w360-date">{todayLabel}</span>
+                </div>
+                <template if:false={isSysAdmin}>
+                    <lightning-button
+                        label="Resume Session"
+                        icon-name="utility:redo"
+                        variant="neutral"
+                        onclick={handleResumeSession}
+                        class="resume-btn"
+                        disabled={isLoading}>
+                    </lightning-button>
+                </template>
+                <template if:true={isSysAdmin}>
+                    <lightning-button
+                        label="View Dev Activity"
+                        icon-name="utility:code"
+                        variant="brand"
+                        onclick={showTabDev}
+                        class="resume-btn">
+                    </lightning-button>
+                </template>
+            </div>
+            <div class="w360-header-right">
+            </div>
+        </div>
+
+        <!-- ── AI Summary Panel — role-aware ── -->
+        <template if:false={isSysAdmin}>
+            <div class="w360-ai-panel">
+                <div class="w360-ai-label">
+                    <lightning-icon icon-name="utility:einstein" size="x-small"></lightning-icon>
+                    &nbsp;Agentforce AI Summary
+                </div>
+                <template if:true={isSummaryLoading}>
+                    <div class="w360-shimmer w360-shimmer-text"></div>
+                    <div class="w360-shimmer w360-shimmer-text w360-shimmer-short"></div>
+                </template>
+                <template if:false={isSummaryLoading}>
+                    <p class="w360-ai-text">{aiSummary}</p>
+                </template>
+            </div>
+        </template>
+
+        <!-- ── SysAdmin: Incident summary panel ── -->
+        <template if:true={isSysAdmin}>
+            <div class="w360-ai-panel">
+                <div class="w360-ai-label">
+                    <lightning-icon icon-name="utility:einstein" size="x-small"></lightning-icon>
+                    &nbsp;Agentforce AI Summary
+                </div>
+                <template if:true={isSummaryLoading}>
+                    <div class="w360-shimmer w360-shimmer-text"></div>
+                    <div class="w360-shimmer w360-shimmer-text w360-shimmer-short"></div>
+                </template>
+                <template if:false={isSummaryLoading}>
+                    <p class="w360-ai-text">{aiSummary}</p>
+                </template>
+            </div>
+        </template>
+
+        <!-- ── Stats Strip — role-aware ── -->
+        <template if:false={isSysAdmin}>
+            <div class="w360-stats">
+                <div class="w360-stat-card w360-stat-blue">
+                    <div class="w360-stat-num">{recentRecordsCount}</div>
+                    <div class="w360-stat-label">Records (7 days)</div>
+                </div>
+                <div class="w360-stat-card w360-stat-amber">
+                    <div class="w360-stat-num">{pendingApprovalsCount}</div>
+                    <div class="w360-stat-label">Pending Approvals</div>
+                </div>
+                <div class="w360-stat-card w360-stat-red">
+                    <div class="w360-stat-num">{overdueTasksCount}</div>
+                    <div class="w360-stat-label">Overdue Tasks</div>
+                </div>
+
+            </div>
+        </template>
+
+        <!-- ── SysAdmin: Incident stats strip ── -->
+        <template if:true={isSysAdmin}>
+            <div class="w360-stats">
+                <div class="w360-stat-card w360-stat-red">
+                    <div class="w360-stat-num">{criticalIncidentsCount}</div>
+                    <div class="w360-stat-label">Critical Issues</div>
+                </div>
+                <div class="w360-stat-card w360-stat-amber">
+                    <div class="w360-stat-num">{warningIncidentsCount}</div>
+                    <div class="w360-stat-label">Warnings (Non-Critical)</div>
+                </div>
+                <div class="w360-stat-card w360-stat-blue">
+                    <div class="w360-stat-num">{totalHitsCount}</div>
+                    <div class="w360-stat-label">Error Occurrences in Org</div>
+                </div>
+                <div class="w360-stat-card w360-stat-green">
+                    <div class="w360-stat-num">{incidentsCount}</div>
+                    <div class="w360-stat-label">Components Affected</div>
+                </div>
+            </div>
+        </template>
+
+        <!-- ── Tab Bar ── -->
+        <!--div class="w360-tabs">
+            <button class={tabClassRecent}    onclick={showTabRecent}>   🕐 Last 7 Days</button>
+            <button class={tabClassOpps}      onclick={showTabOpps}>     💼 Opportunities</button>
+            <button class={tabClassTasks}     onclick={showTabTasks}>    ✅ Overdue Tasks</button>
+            <button class={tabClassApprovals} onclick={showTabApprovals}>🔔 Approvals</button>
+            <button class={tabClassPerms}     onclick={showTabPerms}>    🔐 My Permissions</button>
+            <button class={tabClassDev}       onclick={showTabDev}>      🛠 Dev Activity</button>
+        </div-->
+        <!-- ── Activity Period Toggle ── -->
+        <div class="w360-filter-bar">
+            <span class="w360-filter-label">Show activity:</span>
+            <div class="w360-filter-buttons">
+                <button class={filterClass1D}  onclick={setFilter1D}>1D</button>
+                <button class={filterClass7D}  onclick={setFilter7D}>7D</button>
+                <button class={filterClass30D} onclick={setFilter30D}>30D</button>
+            </div>
+        </div>
+
+        <!-- ── Tab Bar ── -->
+        <div class="w360-tabs">
+            <!-- SysAdmin: Dev Activity + Incidents only -->
+            <template if:true={isSysAdmin}>
+                <button class={tabClassDev}       onclick={showTabDev}>      🛠 Dev Activity</button>
+                <button class={tabClassIncidents} onclick={showTabIncidents}>🚨 Incidents</button>
+            </template>
+            <!-- Non-SysAdmin: sales tabs, plus dev tabs if they have DevAccess permission set -->
+            <template if:false={isSysAdmin}>
+                <button class={tabClassRecent}    onclick={showTabRecent}>   🕐 {activeFilterLabel}</button>
+                <button class={tabClassTasks}     onclick={showTabTasks}>    ✅ Overdue Tasks</button>
+                <button class={tabClassApprovals} onclick={showTabApprovals}>🔔 Approvals</button>
+                <button class={tabClassPerms}     onclick={showTabPerms}>    🔐 My Permissions</button>
+                <template if:true={hasDevAccess}>
+                    <button class={tabClassDev}       onclick={showTabDev}>      🛠 Dev Activity</button>
+                    <button class={tabClassIncidents} onclick={showTabIncidents}>🚨 Incidents</button>
+                </template>
+            </template>
+        </div>
+
+        <!-- ── Content ── -->
+        <div class="w360-content">
+
+            <template if:true={isLoading}>
+                <div class="w360-skeleton-list">
+                    <div class="w360-skeleton-card"></div>
+                    <div class="w360-skeleton-card"></div>
+                    <div class="w360-skeleton-card"></div>
+                </div>
+            </template>
+
+            <template if:false={isLoading}>
+
+                <!-- ═══ Last 7 Days Tab — Rich App Cards ═══ -->
+                <template if:true={activeTabRecent}>
+                    <template if:true={hasFilteredRecentRecords}>
+                        <div class="w360-cards-grid">
+                            <template for:each={filteredRecentRecords} for:item="rec">
+                                <div key={rec.id} class="w360-app-card" data-id={rec.recordId} onclick={handleRecordClick}>
+                                    <div class="w360-app-card-header" data-objtype={rec.objectType}>
+                                        <div class="w360-app-card-icon">
+                                            <lightning-icon icon-name={rec.iconName} size="small"></lightning-icon>
+                                        </div>
+                                        <div class="w360-app-card-type">{rec.objectType}</div>
+                                        <div class={rec.daysAgoBadgeClass}>{rec.daysAgoLabel}</div>
+                                    </div>
+                                    <div class="w360-app-card-body">
+                                        <div class="w360-app-card-name">{rec.recordName}</div>
+                                        <div class="w360-app-card-meta">
+                                            <template if:true={rec.stage}>
+                                                <span class="w360-pill w360-pill-stage">{rec.stage}</span>
+                                            </template>
+                                            <template if:true={rec.formattedAmount}>
+                                                <span class="w360-pill w360-pill-amount">{rec.formattedAmount}</span>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    <div class="w360-app-card-footer">
+                                        <span class={rec.actionClass}>{rec.actionType}</span>
+                                        <span class="w360-app-card-date">{rec.sessionDate}</span>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                    <template if:false={hasFilteredRecentRecords}>
+                        <div class="w360-empty">
+                            <lightning-icon icon-name="utility:search" size="large"></lightning-icon>
+                            <p>No activity found in {activeFilterLabel}.</p>
+                            <p class="w360-empty-sub">Start visiting records and they'll appear here!</p>
+                        </div>
+                    </template>
+                </template>
+
+                <!-- ═══ Overdue Tasks Tab ═══ -->
+                <template if:true={activeTabTasks}>
+                    <template if:true={hasOverdueTasks}>
+                        <div class="w360-cards-grid">
+                            <template for:each={overdueTasks} for:item="task">
+                                <div key={task.Id} class="w360-app-card w360-app-card-task" data-id={task.Id} onclick={handleTaskClick}>
+                                    <div class="w360-app-card-header">
+                                        <div class="w360-app-card-icon w360-icon-red">
+                                            <lightning-icon icon-name="standard:task" size="small"></lightning-icon>
+                                        </div>
+                                        <div class="w360-app-card-type">Task</div>
+                                        <div class="w360-overdue-badge">OVERDUE</div>
+                                    </div>
+                                    <div class="w360-app-card-body">
+                                        <div class="w360-app-card-name">{task.Subject}</div>
+                                        <div class="w360-app-card-sub">{task.WhatName}</div>
+                                    </div>
+                                    <div class="w360-app-card-footer">
+                                        <span class="w360-pill w360-pill-overdue">Due: {task.formattedDue}</span>
+                                        <span class="w360-pill w360-pill-priority">{task.Priority}</span>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                    <template if:false={hasOverdueTasks}>
+                        <div class="w360-empty">
+                            <lightning-icon icon-name="utility:check" size="large"></lightning-icon>
+                            <p>All tasks are on track! 🎉</p>
+                        </div>
+                    </template>
+                </template>
+
+                <!-- ═══ Approvals Tab ═══ -->
+                <template if:true={activeTabApprovals}>
+                    <template if:true={hasPendingApprovals}>
+                        <div class="w360-cards-grid">
+                            <template for:each={pendingApprovals} for:item="approval">
+                                <div key={approval.Id} class="w360-app-card w360-app-card-approval" data-id={approval.TargetObjectId} onclick={handleApprovalClick}>
+                                    <div class="w360-app-card-header">
+                                        <div class="w360-app-card-icon w360-icon-amber">
+                                            <lightning-icon icon-name="standard:approval" size="small"></lightning-icon>
+                                        </div>
+                                        <div class="w360-app-card-type">Approval</div>
+                                        <div class="w360-approval-badge">ACTION NEEDED</div>
+                                    </div>
+                                    <div class="w360-app-card-body">
+                                        <div class="w360-app-card-name">{approval.TargetObjectName}</div>
+                                        <div class="w360-app-card-sub">Submitted {approval.formattedDate}</div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                    <template if:false={hasPendingApprovals}>
+                        <div class="w360-empty">
+                            <lightning-icon icon-name="utility:check" size="large"></lightning-icon>
+                            <p>No pending approvals.</p>
+                        </div>
+                    </template>
+                </template>
+
+                <!-- ═══ Permissions Tab ═══ -->
+                <template if:true={activeTabPerms}>
+                    <template if:true={isPermsLoading}>
+                        <div class="w360-skeleton-list">
+                            <div class="w360-skeleton-card"></div>
+                            <div class="w360-skeleton-card"></div>
+                        </div>
+                    </template>
+                    <template if:false={isPermsLoading}>
+                        <template if:true={hasPermissions}>
+                            <div class="w360-perms-container">
+
+                                <!-- Permission Set filter pills -->
+                                <div class="w360-perm-sets">
+                                    <template for:each={permSetNames} for:item="ps">
+                                        <button key={ps.name}
+                                            class={ps.pillClass}
+                                            data-name={ps.name}
+                                            onclick={handlePermSetFilter}>
+                                            {ps.label}
+                                        </button>
+                                    </template>
+                                </div>
+
+                                <!-- Permissions table -->
+                                <div class="w360-perms-table-wrap">
+                                    <table class="w360-perms-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Object</th>
+                                                <th>Permission Set</th>
+                                                <th class="w360-perm-icon-col">Read</th>
+                                                <th class="w360-perm-icon-col">Create</th>
+                                                <th class="w360-perm-icon-col">Edit</th>
+                                                <th class="w360-perm-icon-col">Delete</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template for:each={filteredPermissions} for:item="perm">
+                                                <tr key={perm.key} class="w360-perm-row">
+                                                    <td class="w360-perm-obj">
+                                                        <lightning-icon icon-name={perm.objIcon} size="x-small"></lightning-icon>
+                                                        <span>{perm.objectName}</span>
+                                                    </td>
+                                                    <td class="w360-perm-set-name">{perm.permSetLabel}</td>
+                                                    <td class="w360-perm-icon-col">{perm.readIcon}</td>
+                                                    <td class="w360-perm-icon-col">{perm.createIcon}</td>
+                                                    <td class="w360-perm-icon-col">{perm.editIcon}</td>
+                                                    <td class="w360-perm-icon-col">{perm.deleteIcon}</td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </template>
+                        <template if:false={hasPermissions}>
+                            <div class="w360-empty">
+                                <lightning-icon icon-name="utility:shield" size="large"></lightning-icon>
+                                <p>No permission set data found.</p>
+                            </div>
+                        </template>
+                    </template>
+                </template>
+
+                <!-- ═══ Dev Activity Tab ═══ -->
+                <template if:true={activeTabDev}>
+                    <template if:true={_devLoading}>
+                        <div class="w360-loading">
+                            <lightning-spinner size="small" alternative-text="Loading dev activity..."></lightning-spinner>
+                        </div>
+                    </template>
+                    <template if:false={_devLoading}>
+                        <template if:true={hasDevActivity}>
+                            <div class="w360-dev-list">
+                                <template for:each={groupedDevActivity} for:item="grp">
+                                    <div key={grp.id} class="w360-dev-item">
+                                        <div class="w360-dev-icon">
+                                            <lightning-icon icon-name={grp.icon} size="x-small"></lightning-icon>
+                                        </div>
+                                        <div class="w360-dev-body">
+                                            <div class="w360-dev-label">{grp.label}
+                                                <span class="w360-dev-badge">{grp.typeBadge}</span>
+                                            </div>
+                                            <div class="w360-dev-meta">{grp.dateLabel}</div>
+                                        </div>
+                                        <div class="w360-dev-count">{grp.countLabel}</div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                        <template if:false={hasDevActivity}>
+                            <div class="w360-empty">
+                                <lightning-icon icon-name="utility:settings" size="large"></lightning-icon>
+                                <p>No dev activity in the last 7 days.</p>
+                                <p style="font-size:.8rem;color:#706e6b;">Setup Audit Trail tracks Apex, Flows, LWC, Fields, Profiles and more.</p>
+                            </div>
+                        </template>
+                    </template>
+                </template>
+
+                <!-- ═══ Incidents Tab ═══ -->
+                <template if:true={activeTabIncidents}>
+
+                    <!-- Loading spinner -->
+                    <template if:true={_incidentsLoading}>
+                        <div class="w360-loading">
+                            <lightning-spinner size="small" alternative-text="Loading incidents..."></lightning-spinner>
+                        </div>
+                    </template>
+
+                    <template if:false={_incidentsLoading}>
+
+                        <!-- ── Incident Detail View ── -->
+                        <template if:true={hasSelectedIncident}>
+                            <div class="w360-inc-detail">
+
+                                <button class="w360-inc-back" onclick={handleBackToIncidents}>
+                                    ← Back to Incidents
+                                </button>
+
+                                <!-- Error header card -->
+                                <div class="w360-inc-header-card">
+                                    <div class="w360-inc-header-top">
+                                        <span class={_selectedIncident.severityClass}>{_selectedIncident.severity}</span>
+                                        <span class="w360-inc-type">{_selectedIncident.exceptionType}</span>
+                                        <span class="w360-inc-hits">{_selectedIncident.hitLabel} occurrences</span>
+                                    </div>
+                                    <div class="w360-inc-msg">{_selectedIncident.errorMessage}</div>
+                                    <div class="w360-inc-meta">
+                                        <lightning-icon icon-name={_selectedIncident.sourceIcon} size="xx-small"></lightning-icon>
+                                        &nbsp;{_selectedIncident.apexClass}
+                                        &nbsp;·&nbsp;{_selectedIncident.formattedTime}
+                                        &nbsp;·&nbsp;{_selectedIncident.triggeredBy}
+                                    </div>
+                                    <template if:true={_selectedIncident.stackTrace}>
+                                        <pre class="w360-inc-stack">{_selectedIncident.stackTrace}</pre>
+                                    </template>
+                                </div>
+
+                                <!-- Correlated dev changes -->
+                                <div class="w360-inc-section-label">
+                                    <lightning-icon icon-name="utility:clock" size="xx-small"></lightning-icon>
+                                    &nbsp;Dev Changes in 2 Hours Before This Error
+                                </div>
+
+                                <template if:true={_correlatedLoading}>
+                                    <div class="w360-loading">
+                                        <lightning-spinner size="x-small" alternative-text="Checking audit trail..."></lightning-spinner>
+                                    </div>
+                                </template>
+
+                                <template if:false={_correlatedLoading}>
+                                    <template if:true={hasCorrelated}>
+                                        <div class="w360-dev-list">
+                                            <template for:each={_correlatedChanges} for:item="chg">
+                                                <div key={chg.changedAt} class="w360-dev-item w360-inc-change-item">
+                                                    <div class="w360-dev-icon">
+                                                        <lightning-icon icon-name={chg.typeIcon} size="x-small"></lightning-icon>
+                                                    </div>
+                                                    <div class="w360-dev-body">
+                                                        <div class="w360-dev-label">
+                                                            {chg.component}
+                                                            <span class="w360-dev-badge">{chg.typeBadge}</span>
+                                                        </div>
+                                                        <div class="w360-dev-meta">{chg.formattedTime}&nbsp;·&nbsp;<strong>{chg.minutesBefore}</strong></div>
+                                                        <div class="w360-inc-change-detail">{chg.detail}</div>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                    <template if:false={hasCorrelated}>
+                                        <div class="w360-inc-no-changes">
+                                            <lightning-icon icon-name="utility:info" size="x-small"></lightning-icon>
+                                            &nbsp;No dev changes found in the 2-hour window.
+                                            Setup Audit Trail may not capture changes by other users.
+                                        </div>
+                                    </template>
+                                </template>
+
+                                <!-- AI Analysis -->
+                                <div class="w360-inc-section-label">
+                                    <lightning-icon icon-name="utility:einstein" size="xx-small"></lightning-icon>
+                                    &nbsp;AI Root-Cause Analysis
+                                </div>
+
+                                <template if:false={_aiAnalysisLoading}>
+                                    <template if:false={_aiAnalysis}>
+                                        <button class="w360-inc-analyze-btn" onclick={handleAnalyzeIncident}>
+                                            <lightning-icon icon-name="utility:einstein" size="x-small"></lightning-icon>
+                                            &nbsp;Analyze with AI — Find Root Cause
+                                        </button>
+                                    </template>
+                                    <template if:true={_aiAnalysis}>
+                                        <div class="w360-inc-ai-result">
+                                            <pre class="w360-inc-ai-text">{_aiAnalysis}</pre>
+                                            <button class="w360-inc-reanalyze" onclick={handleAnalyzeIncident}>↻ Re-analyze</button>
+                                        </div>
+                                    </template>
+                                </template>
+                                <template if:true={_aiAnalysisLoading}>
+                                    <div class="w360-loading">
+                                        <lightning-spinner size="x-small" alternative-text="AI analyzing..."></lightning-spinner>
+                                        <span class="w360-inc-ai-loading-label">Agentforce is analyzing the incident...</span>
+                                    </div>
+                                </template>
+
+                            </div>
+                        </template>
+
+                        <!-- ── Incident List View ── -->
+                        <template if:false={hasSelectedIncident}>
+                            <template if:true={hasIncidents}>
+                                <div class="w360-inc-list-header">
+                                    <lightning-icon icon-name="utility:error" size="x-small"></lightning-icon>
+                                    &nbsp;{incidentsCount} incidents in the last 48 hours
+                                </div>
+                                <div class="w360-inc-list">
+                                    <template for:each={_incidents} for:item="inc">
+                                        <div key={inc.id} class="w360-inc-row" data-id={inc.id} onclick={handleSelectIncident}>
+                                            <div class="w360-inc-row-left">
+                                                <span class={inc.severityClass}>{inc.severity}</span>
+                                                <div class="w360-inc-row-msg">{inc.errorMessage}</div>
+                                                <div class="w360-inc-row-meta">
+                                                    {inc.apexClass}&nbsp;·&nbsp;{inc.formattedTime}
+                                                    &nbsp;·&nbsp;<span class="w360-inc-source-badge">{inc.sourceLabel}</span>
+                                                </div>
+                                            </div>
+                                            <div class="w360-inc-row-right">
+                                                <span class="w360-inc-hits">{inc.hitLabel}</span>
+                                                <lightning-icon icon-name="utility:chevronright" size="x-small"></lightning-icon>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                            <template if:false={hasIncidents}>
+                                <div class="w360-empty">
+                                    <lightning-icon icon-name="utility:check" size="large"></lightning-icon>
+                                    <p>No incidents in the last 48 hours 🎉</p>
+                                    <p style="font-size:.8rem;color:#706e6b;">
+                                        Run <code>Workspace360IncidentSeeder.seedAll()</code> in Developer Console to load demo data.
+                                    </p>
+                                </div>
+                            </template>
+                        </template>
+
+                    </template>
+                </template>
+
+            </template>
+        </div>
+
+        <!-- ── Footer ── -->
+        <div class="w360-footer">
+            <span>Workspace 360 · Powered by Agentforce AI</span>
+            <lightning-button-icon
+                icon-name="utility:refresh"
+                variant="bare"
+                onclick={handleRefresh}
+                title="Refresh">
+            </lightning-button-icon>
+        </div>
+    </div>
+</template>

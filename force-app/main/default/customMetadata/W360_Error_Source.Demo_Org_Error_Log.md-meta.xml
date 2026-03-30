@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <label>Demo Org Error Log</label>
+    <protected>false</protected>
+    <values>
+        <field>Source_Object_API_Name__c</field>
+        <value xsi:type="xsd:string">Demo_Error_Log__c</value>
+    </values>
+    <values>
+        <field>Error_Message_Field__c</field>
+        <value xsi:type="xsd:string">Message__c</value>
+    </values>
+    <values>
+        <field>Class_Name_Field__c</field>
+        <value xsi:type="xsd:string">Class_Name__c</value>
+    </values>
+    <values>
+        <field>Timestamp_Field__c</field>
+        <value xsi:type="xsd:string">Occurred_At__c</value>
+    </values>
+    <values>
+        <field>Severity_Field__c</field>
+        <value xsi:type="xsd:string">Log_Level__c</value>
+    </values>
+    <values>
+        <field>Stack_Trace_Field__c</field>
+        <value xsi:type="xsd:string">Stack_Trace__c</value>
+    </values>
+    <values>
+        <field>Exception_Type_Field__c</field>
+        <value xsi:type="xsd:string">Exception_Type__c</value>
+    </values>
+    <values>
+        <field>Is_Active__c</field>
+        <value xsi:type="xsd:boolean">true</value>
+    </values>
+    <values>
+        <field>Lookback_Hours__c</field>
+        <value xsi:type="xsd:double">24</value>
+    </values>
+    <values>
+        <field>Min_Severity__c</field>
+        <value xsi:type="xsd:string">Warning</value>
+    </values>
+</CustomMetadata>
